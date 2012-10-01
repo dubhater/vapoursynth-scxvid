@@ -155,7 +155,6 @@ static void VS_CC scxvidCreate(const VSMap *in, VSMap *out, void *userData, VSCo
    ScxvidData d;
    ScxvidData *data;
    const VSNodeRef *cref;
-   int err;
 
    d.node = vsapi->propGetNode(in, "clip", 0, 0);
    d.vi = vsapi->getVideoInfo(d.node);

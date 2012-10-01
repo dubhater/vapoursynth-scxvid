@@ -36,6 +36,8 @@ static void VS_CC scxvidInit(VSMap *in, VSMap *out, void **instanceData, VSNode 
       xvid_init.debug = ~0;
       error = xvid_global(NULL, XVID_GBL_INIT, &xvid_init, NULL);
       if (error) {
+         vsapi->freeNode(d->node);
+         free(d);
          vsapi->setError(out, "Scxvid: Failed to initialize Xvid");
          return;
       }
@@ -47,6 +49,8 @@ static void VS_CC scxvidInit(VSMap *in, VSMap *out, void **instanceData, VSNode 
    xvid_info.version = XVID_VERSION;
    error = xvid_global(NULL, XVID_GBL_INFO, &xvid_info, NULL);
    if (error) {
+      vsapi->freeNode(d->node);
+      free(d);
       vsapi->setError(out, "Scxvid: Failed to initialize Xvid");
       return;
    }
@@ -72,6 +76,8 @@ static void VS_CC scxvidInit(VSMap *in, VSMap *out, void **instanceData, VSNode 
 
    error = xvid_encore(NULL, XVID_ENC_CREATE, &d->xvid_enc_create, NULL);
    if (error) {
+      vsapi->freeNode(d->node);
+      free(d);
       vsapi->setError(out, "Scxvid: Failed to initialize Xvid encoder");
       return;
    }
@@ -101,6 +107,9 @@ static void VS_CC scxvidInit(VSMap *in, VSMap *out, void **instanceData, VSNode 
    d->xvid_enc_frame.input.csp = XVID_CSP_YV12;
 
    if (!(d->output_buffer = malloc(SCXVID_BUFFER_SIZE))) {
+      vsapi->freeNode(d->node);
+      xvid_encore(d->xvid_handle, XVID_ENC_DESTROY, NULL, NULL);
+      free(d);
       vsapi->setError(out, "Scxvid: Failed to allocate buffer");
       return;
    }
@@ -128,6 +137,7 @@ static const VSFrameRef *VS_CC scxvidGetFrame(int n, int activationReason, void 
          int error = xvid_encore(d->xvid_handle, XVID_ENC_ENCODE, &d->xvid_enc_frame, NULL);
          if (error < 0) {
             vsapi->setFilterError("Scxvid: xvid_encore returned an error code", frameCtx);
+            vsapi->freeFrame(src);
             return 0;
          }
          d->next_frame++;

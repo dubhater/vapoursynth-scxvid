@@ -13,6 +13,7 @@ typedef struct {
    const VSVideoInfo *vi;
 
    const char *log;
+   int use_slices;
    void *xvid_handle;
    xvid_enc_frame_t xvid_enc_frame;
    void *output_buffer;
@@ -61,6 +62,8 @@ static void VS_CC scxvidInit(VSMap *in, VSMap *out, void **instanceData, VSNode 
    d->xvid_enc_create.width = d->vi->width;
    d->xvid_enc_create.height = d->vi->height;
    d->xvid_enc_create.num_threads = xvid_info.num_threads;
+   if (d->use_slices)
+      d->xvid_enc_create.num_slices = xvid_info.num_threads;
    d->xvid_enc_create.fincr = 1;
    d->xvid_enc_create.fbase = 1;
    d->xvid_enc_create.max_key_interval = 10000000; //huge number
@@ -165,6 +168,7 @@ static void VS_CC scxvidCreate(const VSMap *in, VSMap *out, void *userData, VSCo
    ScxvidData d;
    ScxvidData *data;
    const VSNodeRef *cref;
+   int err;
 
    d.node = vsapi->propGetNode(in, "clip", 0, 0);
    d.vi = vsapi->getVideoInfo(d.node);
@@ -176,6 +180,11 @@ static void VS_CC scxvidCreate(const VSMap *in, VSMap *out, void *userData, VSCo
    }
 
    d.log = vsapi->propGetData(in, "log", 0, 0);
+   d.use_slices = vsapi->propGetInt(in, "use_slices", 0, &err);
+   if (err) {
+      // Enabled by default.
+      d.use_slices = 1;
+   }
 
    data = malloc(sizeof(d));
    *data = d;
@@ -189,5 +198,5 @@ static void VS_CC scxvidCreate(const VSMap *in, VSMap *out, void *userData, VSCo
 
 VS_EXTERNAL_API(void) VapourSynthPluginInit(VSConfigPlugin configFunc, VSRegisterFunction registerFunc, VSPlugin *plugin) {
    configFunc("com.nodame.scxvid", "scxvid", "VapourSynth Scxvid Plugin", VAPOURSYNTH_API_VERSION, 1, plugin);
-   registerFunc("Scxvid", "clip:clip;log:data;", scxvidCreate, 0, plugin);
+   registerFunc("Scxvid", "clip:clip;log:data;use_slices:int:opt", scxvidCreate, 0, plugin);
 }

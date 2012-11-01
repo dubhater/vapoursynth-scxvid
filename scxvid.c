@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <xvid.h>
-#include <VapourSynth.h>
+#include <vapoursynth/VapourSynth.h>
 
 #define SCXVID_BUFFER_SIZE (1024*1024*4)
 

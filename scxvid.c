@@ -9,7 +9,7 @@ static int xvid_inited = 0;
 
 
 typedef struct {
-   const VSNodeRef *node;
+   VSNodeRef *node;
    const VSVideoInfo *vi;
 
    const char *log;
@@ -24,7 +24,7 @@ typedef struct {
 
 static void VS_CC scxvidInit(VSMap *in, VSMap *out, void **instanceData, VSNode *node, VSCore *core, const VSAPI *vsapi) {
    ScxvidData *d = (ScxvidData *) * instanceData;
-   vsapi->setVideoInfo(d->vi, node);
+   vsapi->setVideoInfo(d->vi, 1, node);
 
    d->output_buffer = NULL;
    d->next_frame = 0;
@@ -167,7 +167,6 @@ static void VS_CC scxvidFree(void *instanceData, VSCore *core, const VSAPI *vsap
 static void VS_CC scxvidCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, const VSAPI *vsapi) {
    ScxvidData d;
    ScxvidData *data;
-   const VSNodeRef *cref;
    int err;
 
    d.node = vsapi->propGetNode(in, "clip", 0, 0);
@@ -189,9 +188,7 @@ static void VS_CC scxvidCreate(const VSMap *in, VSMap *out, void *userData, VSCo
    data = malloc(sizeof(d));
    *data = d;
 
-   cref = vsapi->createFilter(in, out, "Scxvid", scxvidInit, scxvidGetFrame, scxvidFree, fmSerial, 0, data, core);
-   vsapi->propSetNode(out, "clip", cref, 0);
-   vsapi->freeNode(cref);
+   vsapi->createFilter(in, out, "Scxvid", scxvidInit, scxvidGetFrame, scxvidFree, fmSerial, 0, data, core);
    return;
 }
 

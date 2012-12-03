@@ -107,7 +107,17 @@ static void VS_CC scxvidInit(VSMap *in, VSMap *out, void **instanceData, VSNode 
    d->xvid_enc_frame.type = XVID_TYPE_AUTO;
    d->xvid_enc_frame.quant = 0;
 
-   d->xvid_enc_frame.input.csp = XVID_CSP_YV12;
+   /* 
+    * NOT XVID_CSP_YV12, even though we are feeding it that,
+    * because with XVID_CSP_YV12 it assumes the U plane
+    * is located just after the Y plane, and the V plane
+    * just after the U plane. This used to be the way
+    * VapourSynth allocated the planes, before r316.
+    *
+    * With XVID_CSP_PLANAR it doesn't assume anything and
+    * just uses whatever pointers we pass.
+    */
+   d->xvid_enc_frame.input.csp = XVID_CSP_PLANAR;
 
    if (!(d->output_buffer = malloc(SCXVID_BUFFER_SIZE))) {
       vsapi->freeNode(d->node);

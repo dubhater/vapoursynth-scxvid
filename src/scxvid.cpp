@@ -2,7 +2,7 @@
 #include <cstring>
 #include <unordered_map>
 #include <xvid.h>
-#include <vapoursynth/VapourSynth.h>
+#include <VapourSynth.h>
 
 #define SCXVID_BUFFER_SIZE (1024*1024*4)
 

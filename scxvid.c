@@ -136,6 +136,8 @@ static const VSFrameRef *VS_CC scxvidGetFrame(int n, int activationReason, void 
       vsapi->requestFrameFilter(n, d->node, frameCtx);
    } else if (activationReason == arAllFramesReady) {
       const VSFrameRef *src = vsapi->getFrameFilter(n, d->node, frameCtx);
+      xvid_enc_stats_t stats;
+      stats.version = XVID_VERSION;
 
       if (d->next_frame == n) {
          int plane;
@@ -147,7 +149,7 @@ static const VSFrameRef *VS_CC scxvidGetFrame(int n, int activationReason, void 
          d->xvid_enc_frame.length = SCXVID_BUFFER_SIZE;
          d->xvid_enc_frame.bitstream = d->output_buffer;
 
-         int error = xvid_encore(d->xvid_handle, XVID_ENC_ENCODE, &d->xvid_enc_frame, NULL);
+         int error = xvid_encore(d->xvid_handle, XVID_ENC_ENCODE, &d->xvid_enc_frame, &stats);
          if (error < 0) {
             vsapi->setFilterError("Scxvid: xvid_encore returned an error code", frameCtx);
             vsapi->freeFrame(src);
@@ -156,7 +158,13 @@ static const VSFrameRef *VS_CC scxvidGetFrame(int n, int activationReason, void 
          d->next_frame++;
       }
 
-      return src;
+      VSFrameRef *dst = vsapi->copyFrame(src, core);
+      vsapi->freeFrame(src);
+
+      VSMap *props = vsapi->getFramePropsRW(dst);
+      vsapi->propSetInt(props, "_SceneChangePrev", stats.type == XVID_TYPE_IVOP, paReplace);
+
+      return dst;
    }
 
    return 0;
@@ -188,7 +196,8 @@ static void VS_CC scxvidCreate(const VSMap *in, VSMap *out, void *userData, VSCo
       return;
    }
 
-   d.log = vsapi->propGetData(in, "log", 0, 0);
+   d.log = vsapi->propGetData(in, "log", 0, &err);
+
    d.use_slices = vsapi->propGetInt(in, "use_slices", 0, &err);
    if (err) {
       // Enabled by default.
@@ -205,5 +214,5 @@ static void VS_CC scxvidCreate(const VSMap *in, VSMap *out, void *userData, VSCo
 
 VS_EXTERNAL_API(void) VapourSynthPluginInit(VSConfigPlugin configFunc, VSRegisterFunction registerFunc, VSPlugin *plugin) {
    configFunc("com.nodame.scxvid", "scxvid", "VapourSynth Scxvid Plugin", VAPOURSYNTH_API_VERSION, 1, plugin);
-   registerFunc("Scxvid", "clip:clip;log:data;use_slices:int:opt", scxvidCreate, 0, plugin);
+   registerFunc("Scxvid", "clip:clip;log:data:opt;use_slices:int:opt", scxvidCreate, 0, plugin);
 }

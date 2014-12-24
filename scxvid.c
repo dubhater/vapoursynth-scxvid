@@ -71,7 +71,7 @@ static void VS_CC scxvidInit(VSMap *in, VSMap *out, void **instanceData, VSNode 
    xvid_plugin_2pass1_t xvid_rc_plugin;
    memset(&xvid_rc_plugin, 0, sizeof(xvid_rc_plugin));
    xvid_rc_plugin.version = XVID_VERSION;
-   xvid_rc_plugin.filename = d->log;
+   xvid_rc_plugin.filename = (char *)d->log;
    plugins[0].func = xvid_plugin_2pass1;
    plugins[0].param = &xvid_rc_plugin;
    d->xvid_enc_create.plugins = plugins;

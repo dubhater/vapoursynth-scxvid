@@ -44,3 +44,8 @@ Note: when compiling for Windows, you must prefix the xvidcore library's file
 name(s) (xvidcore.dll and xvidcore.dll.a, or xvidcore.a) with "lib", or
 Scxvid's build system won't pick it up. This is thanks to xvidcore's special
 snowflake build system, which reinvents libtool.
+
+License
+=======
+
+GPL v2.
